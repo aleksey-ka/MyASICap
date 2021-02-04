@@ -79,7 +79,7 @@ QSlider::handle:horizontal {
   <widget class="QWidget" name="centralWidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QLabel" name="imageView">
+     <widget class="ImageView" name="imageView">
       <property name="text">
        <string>No image</string>
       </property>
@@ -821,6 +821,13 @@ border-radius: 10px;</string>
   </widget>
  </widget>
  <layoutdefault spacing="3" margin="3"/>
+ <customwidgets>
+  <customwidget>
+   <class>ImageView</class>
+   <extends>QLabel</extends>
+   <header>imageview.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

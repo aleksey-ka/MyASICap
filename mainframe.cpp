@@ -11,6 +11,7 @@
 
 #include "asicamera.h"
 #include "mockcamera.h"
+#include "renderer.h"
 
 #include <chrono>
 
@@ -95,6 +96,14 @@ MainFrame::MainFrame( QWidget *parent ) :
             }
        );
    }
+
+   auto focuserControls = new FocuserControls( this );
+   focuserControls->setWindowFlags( Qt::Tool );
+   focuserControls->setWindowTitle( "My Arduino Focuser" );
+   focuserControls->move( 0, 0 );
+   focuserControls->show();
+
+   ui->imageView->setCursor( QCursor( QPixmap( ":CrossHair.png" ), 23, 23 ) );
 
    updateUI();
 }
@@ -376,6 +385,7 @@ void MainFrame::imageReady()
         } ) );
 
         auto msec = render( result->RawPixels(), result->Width(), result->Height() );
+        ui->imageView->SetImage( result );
         qDebug() << "Rendered in " << msec << "msec";
     }
 
@@ -400,121 +410,21 @@ ulong MainFrame::render( const ushort* raw, int width, int height )
 {
     auto start = std::chrono::steady_clock::now();
 
-    std::vector<uint> histR( 256 );
-    std::fill( histR.begin(), histR.end(), 0 );
-    std::vector<uint> histG( 256 );
-    std::fill( histG.begin(), histG.end(), 0 );
-    std::vector<uint> histB( 256 );
-    std::fill( histG.begin(), histG.end(), 0 );
-
-    size_t w = width / 2;
-    size_t h = height / 2;
-    size_t byteWidth = 3 * w;
-    std::vector<uchar> pixels( byteWidth * h );
-    uchar* rgb = pixels.data();
-    for( size_t y = 0; y < h; y++ ) {
-        const ushort* srcLine = raw + 2 * width * y;
-        uchar* dstLine = rgb + byteWidth * y;
-        for( size_t x = 0; x < w; x++ ) {
-            const ushort* src = srcLine + 2 * x;
-            uchar r = src[0] / 256;
-            uchar g = src[1] / 256;
-            uchar b = src[width + 1] / 256;
-
-            uchar* dst = dstLine + 3 * x;
-            dst[0] = r;
-            dst[1] = g;
-            dst[2] = b;
-
-            if( r < histR.size() ) {
-                histR[r]++;
-            }
-            if( g < histG.size() ) {
-                histG[g]++;
-            }
-            if( b < histB.size() ) {
-                histB[b]++;
-            }
-        }
-    }
-
-    QImage image( rgb, w, h, QImage::Format_RGB888 );
-    QPixmap pixmap = QPixmap::fromImage( image );
+    Renderer renderer( raw, width, height );
+    QPixmap pixmap = renderer.RenderHalfResWithHistogram();
     if( drawTargetingCircle ) {
         QPainter painter( &pixmap );
         QPen pen( QColor::fromRgb( 0xFF, 0, 0 ) );
         pen.setWidth( 3 );
         painter.setPen( pen );
-        painter.drawEllipse( w / 2 - 30, h / 2 - 30, 60, 60 );
+        painter.drawEllipse( pixmap.width() / 2 - 30, pixmap.height() / 2 - 30, 60, 60 );
     }
     ui->imageView->setPixmap( pixmap );
 
-    renderHistogram( histR.data(), histG.data(), histB.data(), histR.size() );
+    ui->histogramView->setPixmap( renderer.RenderHistogram() );
 
     auto end = std::chrono::steady_clock::now();
     return std::chrono::duration_cast<std::chrono::milliseconds>( end - start ).count();
-}
-
-void MainFrame::renderHistogram( const uint* r, const uint* g, const uint* b, int size )
-{
-    uint max = 0;
-    for( int i = 0; i < size - 1; i++ ) {
-        if( r[i] > max ) {
-            max = r[i];
-        }
-        if( g[i] > max ) {
-            max = g[i];
-        }
-        if( b[i] > max ) {
-            max = b[i];
-        }
-    }
-
-    int h = 128;
-    int biteWidth = 3 * size;
-    std::vector<uchar> hist( biteWidth * h );
-    std::fill( hist.begin(), hist.end(), 0 );
-    uchar* p = hist.data();
-    for( int i = 0; i < size; i++ ) {
-        int R = 127 - ( 127 * r[i] ) / max;
-        int G = 127 - ( 127 * g[i] ) / max;
-        int B = 127 - ( 127 * b[i] ) / max;
-        for( int j = 0; j < h; j++ ) {
-            uchar* p0 = p + j * biteWidth + 3 * i;
-            if( R < 127 ) {
-                if( j > R ) {
-                    p0[0] = 0x50;
-                } else if( j == R ){
-                    p0[0] = 0xFF;
-                }
-            }
-            if( G < 127 ) {
-                if( j > G ) {
-                    p0[1] = 0x50;
-                } else if( j == G ){
-                    p0[1] = 0xFF;
-                }
-            }
-            if( B < 127 ) {
-                if( j > B ) {
-                    // Make blue on black brighter (otherwise it is too dim)
-                    if( p0[0] == 0 && p0[1] == 0 ) {
-                        p0[2] = 0x80;
-                    } else {
-                        p0[2] = 0x50;
-                    }
-                } else if( j == B ){
-                    // Make blue outline brighter
-                    p0[0] = 0x80;
-                    p0[1] = 0x80;
-                    p0[2] = j < 127 ? 0xFF : 0;
-                }
-            }
-        }
-    }
-
-    QImage image( p, size, h, QImage::Format_RGB888 );
-    ui->histogramView->setPixmap( QPixmap::fromImage( image ) );
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

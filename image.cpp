@@ -84,10 +84,15 @@ std::shared_ptr<const Raw16Image> Raw16Image::LoadFromFile( const char* filePath
     imageInfo.Camera = toString( map[L"CAMERA"] );
 
     auto result = std::make_shared<Raw16Image>( imageInfo );
+    unsigned short* buf = (unsigned short*)result->Buffer();
 
     FILE* file = fopen( filePath, "rb" );
-    fread( result->Buffer(), 1, result->BufferSize(), file );
+    fread( buf, 1, result->BufferSize(), file );
     fclose( file );
+
+    for( int i = 0; i < result->BufferSize() / sizeof( buf[0] ); i++ ) {
+       buf[i] >>= 4;
+    }
 
     return result;
 }

@@ -27,20 +27,27 @@ CONFIG += c++11
 SOURCES += \
         asicamera.cpp \
         focuser.cpp \
+        focusercontrols.cpp \
         image.cpp \
+        imageview.cpp \
         main.cpp \
         mainframe.cpp \
-        mockcamera.cpp
+        mockcamera.cpp \
+        renderer.cpp
 
 HEADERS += \
         asicamera.h \
         camera.h \
         focuser.h \
+        focusercontrols.h \
         image.h \
+        imageview.h \
         mainframe.h \
-        mockcamera.h
+        mockcamera.h \
+        renderer.h
 
 FORMS += \
+        focusercontrols.ui \
         mainframe.ui
 
 LIBS += -lASICamera2

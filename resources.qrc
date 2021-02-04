@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>mainframe.ico</file>
+        <file>CrossHair.png</file>
     </qresource>
 </RCC>
