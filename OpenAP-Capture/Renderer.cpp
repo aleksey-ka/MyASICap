@@ -78,6 +78,49 @@ QPixmap Renderer::Render( TRenderingMethod method, int x, int y, int W, int H )
     }
 }
 
+QPixmap Renderer::RenderQ( int x, int y, int W, int H )
+{
+    // Initialize histogram
+    const int hSize = 256;
+    histR.resize( hSize );
+    histG.resize( hSize );
+    histB.resize( hSize );
+
+    x -= W / 2;
+    y -= H / 2;
+    size_t w = W > 0 ? W : width / 2;
+    size_t h = H > 0 ? H : height / 2;
+
+    size_t byteWidth = 3 * w;
+    std::vector<uchar> pixels( byteWidth * h );
+    uchar* rgb = pixels.data();
+
+    CDebayer_RawU16_HalfRes debayer( raw, width, height, bitDepth );
+    debayer.ToRgbU8( rgb, byteWidth, x, y, w, h, histR.data(), histG.data(), histB.data() );
+    maxValue = debayer.MaxValue;
+    maxCount = debayer.MaxCount;
+    minValue = debayer.MinValue;
+    minCount = debayer.MinCount;
+
+    size_t byteWidth2= byteWidth / 2;
+    std::vector<uchar> pixels2( byteWidth2 * h / 2);
+    uchar* rgb2 = pixels.data();
+    for( int i = 0; i < h / 2; i++ ) {
+        const uchar* ptr = rgb + 2 * i * byteWidth;
+        uchar* ptr2 = rgb2 + i * byteWidth2;
+        for( int j = 0; j < w / 2; j++ ) {
+            const uchar* p = ptr + 6 * j;
+            uchar* p2 = ptr2 + 3 * j;
+            p2[0] = ( p[0] + p[3] + p[byteWidth] + p[byteWidth + 3] ) / 4;
+            p2[1] = ( p[1] + p[4] + p[byteWidth + 1] + p[byteWidth + 4] ) / 4;
+            p2[2] = ( p[2] + p[5] + p[byteWidth + 2] + p[byteWidth + 5] ) / 4;
+        }
+    }
+
+    return Qt::CreatePixmap( rgb2, w / 2, h / 2, byteWidth2 );
+}
+
+
 static QString collapseNumber( uint n )
 {
     // Collapse uint to Kilo-s and Mega-s with at most 3 digits (1.24K, 24.5M)

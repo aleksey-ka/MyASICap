@@ -729,7 +729,11 @@ ulong MainFrame::render( const ushort* raw, int width, int height, int bitDepth 
             }
         } else {
             Renderer renderer( raw, width, height, bitDepth );
-            pixmap = renderer.Render( ui->showFullResolution->isChecked() ? RM_FullResolution : RM_HalfResolution );
+            if( ui->quaterSizeCheckBox->isChecked() ) {
+                pixmap = renderer.RenderQ();
+            } else {
+                pixmap = renderer.Render( ui->showFullResolution->isChecked() ? RM_FullResolution : RM_HalfResolution );
+            }
             ui->histogramView->setPixmap( renderer.RenderHistogram() );
         }
         tools.Draw( pixmap );
@@ -876,6 +880,9 @@ void MainFrame::on_filterWheelComboBox_currentIndexChanged( int index )
 void MainFrame::on_imageView_imagePressed( int cx, int cy, Qt::MouseButton button, Qt::KeyboardModifiers modifiers )
 {
     int scale = ui->showFullResolution->isChecked() ? 1 : 2;
+    if( ui->quaterSizeCheckBox->isChecked() ) {
+        scale = 4;
+    }
     zoomCenter.setX( cx * scale );
     zoomCenter.setY( cy * scale );
 

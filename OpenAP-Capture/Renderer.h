@@ -18,6 +18,7 @@ public:
     Renderer( const ushort* raw, int width, int height, int bitDepth );
 
     QPixmap Render( TRenderingMethod, int x = 0, int y = 0, int w = 0, int h = 0 );
+    QPixmap RenderQ( int x = 0, int y = 0, int w = 0, int h = 0 );
     QPixmap RenderHistogram();
 
 private:

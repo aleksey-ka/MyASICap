@@ -198,6 +198,13 @@ QFrame {
               </widget>
              </item>
              <item>
+              <widget class="QCheckBox" name="quaterSizeCheckBox">
+               <property name="text">
+                <string>1/4</string>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QCheckBox" name="stretchCheckBox">
                <property name="text">
                 <string>Stretch</string>
