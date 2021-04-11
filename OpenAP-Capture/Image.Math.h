@@ -65,6 +65,7 @@ public:
 
     std::shared_ptr<CRgbImage> Stretch( int x, int y, int w, int h ) const;
     std::shared_ptr<CRgbImage> StretchHalfRes( int x, int y, int w, int h ) const;
+    std::shared_ptr<CRgbImage> StretchQ( int x, int y, int w, int h ) const;
 
     DetectionResults DetectStars( int x, int y, int w, int h ) const;
 

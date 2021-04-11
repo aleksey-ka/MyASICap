@@ -232,6 +232,32 @@ std::shared_ptr<CRgbImage> CRawU16::StretchHalfRes( int x0, int y0, int W, int H
     return result;
 }
 
+std::shared_ptr<CRgbImage> CRawU16::StretchQ( int x, int y, int w, int h ) const
+{
+    auto rgbImage = StretchHalfRes( x, y, w, h );
+    int byteWidth = rgbImage->ByteWidth();
+    w /= 2;
+    h /= 2;
+
+    auto result = std::make_shared<CRgbImage>( w / 2, h / 2 );
+    for( int i = 0; i < h / 2; i++ ) {
+        const uchar* ptr = rgbImage->ScanLine( 2 * i );
+        uchar* ptr2 = result->ScanLine( i );
+        for( int j = 0; j < w / 2; j++ ) {
+            const uchar* src0 = ptr + 2 * 3 * j;
+            const uchar* src1 = src0 + 3;
+            const uchar* src2 = src0 + byteWidth;
+            const uchar* src3 = src0 + byteWidth + 3;
+
+            uchar* dst = ptr2 + 3 * j;
+            dst[0] = ( src0[0] + src1[0] + src2[0] + src3[0] ) / 4;
+            dst[1] = ( src0[1] + src1[1] + src2[1] + src3[1] ) / 4;
+            dst[2] = ( src0[2] + src1[2] + src2[2] + src3[2] ) / 4;
+        }
+    }
+    return result;
+}
+
 std::shared_ptr<CGrayU16Image> CRawU16::ToGrayU16( const CRgbU16Image* rgb16 )
 {
     int width = rgb16->Width();

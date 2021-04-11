@@ -726,7 +726,9 @@ ulong MainFrame::render( const ushort* raw, int width, int height, int bitDepth 
         QPixmap pixmap;
         if( ui->stretchCheckBox->isChecked() ) {
             CRawU16 rawU16( raw, width, height, bitDepth );
-            if( ui->showFullResolution->isChecked() ) {
+            if( ui->quaterSizeCheckBox->isChecked() ) {
+                pixmap = Qt::CreatePixmap( rawU16.StretchQ( 0, 0, width, height ) );
+            } else if( ui->showFullResolution->isChecked() ) {
                 pixmap = Qt::CreatePixmap( rawU16.Stretch( 0, 0, width, height ) );
             } else {
                 pixmap = Qt::CreatePixmap( rawU16.StretchHalfRes( 0, 0, width, height ) );
